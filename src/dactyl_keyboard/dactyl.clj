@@ -68,9 +68,9 @@
 (def cornerrow (dec lastrow))
 (def lastcol (dec ncols))
 
-;; 3x6 layout: cols 4 and 5 have no row 0 (only rows 1 and 2)
+;; 3x6 layout: col 5 (pinky-outer) has no row 0; col 4 (pinky) has full 3 rows
 (defn valid-key? [column row]
-  (not (and (>= column 4) (= row 0))))
+  (not (and (>= column 5) (= row 0))))
 
 ;;;;;;;;;;;;;;;;;
 ;; Switch Hole ;;
@@ -324,12 +324,12 @@
                   (key-place (inc column) row web-post-bl)
                   (key-place (inc column) (inc row) web-post-tl)))
 
-           ;; Step connector: col3 has row 0, col4 starts at row 1.
-           ;; Bridge the gap between col3-row0 (bottom-right) and col4-row1 (top-left).
+           ;; Step connector: col4 has row 0, col5 starts at row 1.
+           ;; Bridge the gap between col4-row0 (bottom-right) and col5-row1 (top-left).
            [(triangle-hulls
-              (key-place 3 0 web-post-br)
-              (key-place 3 1 web-post-tr)
-              (key-place 4 1 web-post-tl))])))
+              (key-place 4 0 web-post-br)
+              (key-place 4 1 web-post-tr)
+              (key-place 5 1 web-post-tl))])))
 
 ;;;;;;;;;;;;
 ;; Thumbs ;;
@@ -397,9 +397,7 @@
        (if trackball-enabled nil (thumb-tl-place shape))
         (thumb-bl-place shape)))
 
-(defn thumb-15x-layout [shape]
-      (union
-        (thumb-tr-place shape)))
+; thumb-15x-layout (and thumb-tr-place) removed — thumb-tr blocked col-0 low row reach
 
 (def larger-plate
   (let [plate-height (- (/ (- sa-double-length mount-height) 3) 0.5)
@@ -410,15 +408,11 @@
 
 (def thumbcaps
   (union
-    (thumb-1x-layout (sa-cap 1))
-    (thumb-15x-layout (rotate (/ π 2) [0 0 1] (sa-cap 1)))))
+    (thumb-1x-layout (sa-cap 1))))
 
 (def thumb
   (union
-    (thumb-1x-layout single-plate)
-    (thumb-15x-layout single-plate)
-    ; (thumb-15x-layout larger-plate)
-    ))
+    (thumb-1x-layout single-plate)))
 
 (def thumb-post-tr (translate [(- (/ mount-width 2) post-adj)  (- (/ mount-height  2) post-adj) 0] web-post))
 (def thumb-post-tl (translate [(+ (/ mount-width -2) post-adj) (- (/ mount-height  2) post-adj) 0] web-post))
@@ -428,20 +422,6 @@
 (def thumb-connectors
   (if trackball-enabled
     (union
-     ; top right vertical
-     (triangle-hulls
-      (thumb-tr-place web-post-br)
-      (thumb-tr-place web-post-bl)
-      (thumb-mr-place web-post-br))
-     ; Between the top and middle
-     (triangle-hulls
-      (thumb-tr-place web-post-tl)
-      (thumb-mr-place web-post-tr)
-      (thumb-mr-place web-post-br))
-     (triangle-hulls
-      (thumb-tr-place web-post-bl)
-      (thumb-tr-place web-post-tl)
-      (thumb-mr-place web-post-br))
      ; Between middle and first bottom
      (triangle-hulls
       (thumb-mr-place web-post-tl)
@@ -452,11 +432,6 @@
       (thumb-mr-place web-post-tl)
       (thumb-br-place web-post-br)
       (thumb-bl-place web-post-br))
-     ; Between the top and middle over by the trackball
-     (triangle-hulls
-      (thumb-tr-place web-post-tl)
-      (thumb-mr-place web-post-tr)
-      (thumb-mr-place web-post-tl))
      ; Between the bottom two
      (triangle-hulls
       (thumb-br-place web-post-tr)
@@ -471,17 +446,17 @@
       (thumb-mr-place web-post-tl)
       (thumb-bl-place web-post-tr)
       (thumb-bl-place web-post-br))
-     (triangle-hulls    ; top two to the main keyboard, starting on the left
+     (triangle-hulls    ; thumb-mr to main keyboard, starting on the left
       (key-place 0 cornerrow web-post-br)
-      (thumb-tr-place thumb-post-tl)
+      (thumb-mr-place web-post-tl)
       (key-place 1 cornerrow web-post-bl)
-      (thumb-tr-place thumb-post-tr)
+      (thumb-mr-place web-post-tr)
       (key-place 1 cornerrow web-post-br)
       (key-place 2 lastrow web-post-tl)
       (key-place 2 lastrow web-post-bl)
-      (thumb-tr-place thumb-post-tr)
+      (thumb-mr-place web-post-tr)
       (key-place 2 lastrow web-post-bl)
-      (thumb-tr-place thumb-post-br)
+      (thumb-mr-place web-post-br)
       (key-place 2 lastrow web-post-br)
       (key-place 3 lastrow web-post-bl)
       (key-place 2 lastrow web-post-tr)
@@ -503,20 +478,11 @@
       (key-place 3 lastrow web-post-tr)
       (key-place 4 cornerrow web-post-bl)))
     (union
-     (triangle-hulls    ; top two
-      (thumb-tl-place web-post-tr)
-      (thumb-tl-place web-post-br)
-      (thumb-tr-place thumb-post-tl)
-      (thumb-tr-place thumb-post-bl))
      (triangle-hulls    ; bottom two
       (thumb-br-place web-post-tr)
       (thumb-br-place web-post-br)
       (thumb-mr-place web-post-tl)
       (thumb-mr-place web-post-bl))
-     (triangle-hulls
-      (thumb-mr-place web-post-tr)
-      (thumb-mr-place web-post-br)
-      (thumb-tr-place thumb-post-br))
      (triangle-hulls    ; between top row and bottom row
       (thumb-br-place web-post-tl)
       (thumb-bl-place web-post-bl)
@@ -525,10 +491,7 @@
       (thumb-mr-place web-post-tl)
       (thumb-tl-place web-post-bl)
       (thumb-mr-place web-post-tr)
-      (thumb-tl-place web-post-br)
-      (thumb-tr-place web-post-bl)
-      (thumb-mr-place web-post-tr)
-      (thumb-tr-place web-post-br))
+      (thumb-tl-place web-post-br))
      (triangle-hulls    ; top two to the middle two, starting on the left
       (thumb-tl-place web-post-tl)
       (thumb-bl-place web-post-tr)
@@ -538,20 +501,20 @@
       (thumb-tl-place web-post-bl)
       (thumb-tl-place web-post-br)
       (thumb-mr-place web-post-tr))
-     (triangle-hulls    ; top two to the main keyboard, starting on the left
+     (triangle-hulls    ; thumb to the main keyboard, starting on the left
       (thumb-tl-place web-post-tl)
       (key-place 0 cornerrow web-post-bl)
       (thumb-tl-place web-post-tr)
       (key-place 0 cornerrow web-post-br)
-      (thumb-tr-place thumb-post-tl)
+      (thumb-mr-place web-post-tl)
       (key-place 1 cornerrow web-post-bl)
-      (thumb-tr-place thumb-post-tr)
+      (thumb-mr-place web-post-tr)
       (key-place 1 cornerrow web-post-br)
       (key-place 2 lastrow web-post-tl)
       (key-place 2 lastrow web-post-bl)
-      (thumb-tr-place thumb-post-tr)
+      (thumb-mr-place web-post-tr)
       (key-place 2 lastrow web-post-bl)
-      (thumb-tr-place thumb-post-br)
+      (thumb-mr-place web-post-br)
       (key-place 2 lastrow web-post-br)
       (key-place 3 lastrow web-post-bl)
       (key-place 2 lastrow web-post-tr)
@@ -853,8 +816,7 @@
                                         (thumb-mr-place (if trackball-enabled bottom-hotswap hotswap))
                                         (thumb-br-place hotswap)
                                         (if trackball-enabled nil (thumb-tl-place bottom-hotswap))
-                                        (thumb-bl-place bottom-hotswap)
-                                        (thumb-tr-place bottom-hotswap))))
+                                        (thumb-bl-place bottom-hotswap))))
 
 (def hotswap-holes (hotswap-place buckle-holes-on-key))
 
@@ -980,8 +942,7 @@
   )
 
 (def thumb-key-clearance (union
-                          (thumb-1x-layout (clearance 0 0 30))
-                          (thumb-15x-layout (rotate (/ π 2) [0 0 1] (clearance 2.5 2.5 30)))))
+                          (thumb-1x-layout (clearance 0 0 30))))
 
 (def trackball-hotswap-clearance
                                    (union
@@ -1224,7 +1185,7 @@
     trackball-tweeners
     (union
      (wall-brace thumb-mr-place  0 (- wall-multiplier) web-post-bl thumb-br-place  0 -1 web-post-br))))
-(def back-convex-thumb-wall-1 (wall-brace thumb-mr-place  0 (- wall-multiplier) web-post-br thumb-tr-place 0 (- wall-multiplier) thumb-post-br))
+(def back-convex-thumb-wall-1 (wall-brace thumb-mr-place 1 0 web-post-tr thumb-mr-place 0 (- wall-multiplier) web-post-br))
 (def back-convex-thumb-wall-2 (if trackball-enabled
                                 ; Back right thumb to the middle one
                                 (triangle-hulls
@@ -1247,16 +1208,14 @@
    ))
 
 (def pro-micro-wall (union
-                     ; Back (top) wall for cols 0–3, which have row 0
-                     (for [x (range 0 4)] (key-wall-brace x 0 0 1 web-post-tl x 0 0 1 web-post-tr))
-                     ; Back (top) wall for cols 4–5, which start at row 1
-                     (for [x (range 4 ncols)] (key-wall-brace x 1 0 1 web-post-tl x 1 0 1 web-post-tr))
-                     ; Connect adjacent top walls within cols 0–3 (all row 0)
-                     (for [x (range 1 4)] (key-wall-brace x 0 0 1 web-post-tl (dec x) 0 0 1 web-post-tr))
-                     ; Step: connect col 3 (row 0) top-wall to col 4 (row 1) top-wall
-                     (key-wall-brace 4 1 0 1 web-post-tl 3 0 0 1 web-post-tr)
-                     ; Connect adjacent top walls within cols 4–5 (all row 1)
-                     (for [x (range 5 ncols)] (key-wall-brace x 1 0 1 web-post-tl (dec x) 1 0 1 web-post-tr))
+                     ; Back (top) wall for cols 0–4, which have row 0
+                     (for [x (range 0 5)] (key-wall-brace x 0 0 1 web-post-tl x 0 0 1 web-post-tr))
+                     ; Back (top) wall for col 5, which starts at row 1
+                     (key-wall-brace 5 1 0 1 web-post-tl 5 1 0 1 web-post-tr)
+                     ; Connect adjacent top walls within cols 0–4 (all row 0)
+                     (for [x (range 1 5)] (key-wall-brace x 0 0 1 web-post-tl (dec x) 0 0 1 web-post-tr))
+                     ; Step: connect col 4 (row 0) top-wall to col 5 (row 1) top-wall
+                     (key-wall-brace 5 1 0 1 web-post-tl 4 0 0 1 web-post-tr)
   ))
 (def back-pinky-wall (for [x (range 4 ncols)] (key-wall-brace x lastrow 0 -1 web-post-bl x lastrow 0 -1 web-post-br)))
 (def non-thumb-walls (union
@@ -1279,7 +1238,7 @@
 
 ;                            (for [x (range 5 ncols)] (key-wall-brace x cornerrow 0 -1 web-post-bl (dec x) cornerrow 0 -1 web-post-br))
                             ; Right before the start of the thumb
-                            (wall-brace thumb-tr-place  0 -1 thumb-post-br (partial key-place 3 lastrow)  0 -1 web-post-bl)))
+                            (wall-brace thumb-mr-place  0 -1 web-post-br (partial key-place 3 lastrow)  0 -1 web-post-bl)))
 (def case-walls
   (union
    right-wall
