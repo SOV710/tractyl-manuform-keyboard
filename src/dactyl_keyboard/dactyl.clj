@@ -12,8 +12,8 @@
 ;; Shape parameters ;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
-(def nrows 4)
-(def ncols 5)
+(def nrows 3)
+(def ncols 6)
 (def trackball-enabled true)
 (def printed-hotswap? true) ; Whether you want the 3d printed version of the hotswap or you ordered some from krepublic
 
@@ -30,7 +30,8 @@
 (defn column-offset [column] (cond
                                (= column 2) [0 2.82 -4.5]
                                (= column 3) [0 -1 -4]
-                               (>= column 4) [0 -16 -5.50]            ; original [0 -5.8 5.64]
+                               (= column 4) [0 -16 -5.50]             ; pinky column, original [0 -5.8 5.64]
+                               (>= column 5) [0 -20 -6.50]            ; pinky-outer column, more rearward and lower
                                :else [0 -5 1.5]))
 
 (def thumb-offsets [6 0 10])
@@ -66,6 +67,10 @@
 (def lastrow (dec nrows))
 (def cornerrow (dec lastrow))
 (def lastcol (dec ncols))
+
+;; 3x6 layout: cols 4 and 5 have no row 0 (only rows 1 and 2)
+(defn valid-key? [column row]
+  (not (and (>= column 4) (= row 0))))
 
 ;;;;;;;;;;;;;;;;;
 ;; Switch Hole ;;
@@ -230,8 +235,7 @@
   (apply union
          (for [column columns
                row rows
-               :when (or (.contains [2 3] column)
-                         (not= row lastrow))]
+               :when (valid-key? column row)]
               (->> single-plate
                    (key-place column row)))))
 
@@ -239,8 +243,7 @@
   (apply union
          (for [column columns
                row rows
-               :when (or (.contains [2 3] column)
-                         (not= row lastrow))]
+               :when (valid-key? column row)]
               (->> (sa-cap (if (and (true? pinky-15u) (= column lastcol)) 1.5 1))
                    (key-place column row)))))
 
@@ -284,18 +287,24 @@
 (def connectors
   (apply union
          (concat
-           ;; Row connections
+           ;; Row connections (horizontal, between adjacent columns, same row)
+           ;; Use (range 0 nrows) so all 3 rows are covered; guard both sides with valid-key?
            (for [column (range 0 (dec ncols))
-                 row (range 0 lastrow)]
+                 row (range 0 nrows)
+                 :when (and (valid-key? column row)
+                            (valid-key? (inc column) row))]
                 (triangle-hulls
                   (key-place (inc column) row web-post-tl)
                   (key-place column row web-post-tr)
                   (key-place (inc column) row web-post-bl)
                   (key-place column row web-post-br)))
 
-           ;; Column connections
+           ;; Column connections (vertical, between adjacent rows in same column)
+           ;; (range 0 lastrow) = [0,1] → connects rows 0→1 and 1→2
            (for [column columns
-                 row (range 0 cornerrow)]
+                 row (range 0 lastrow)
+                 :when (and (valid-key? column row)
+                            (valid-key? column (inc row)))]
                 (triangle-hulls
                   (key-place column row web-post-bl)
                   (key-place column row web-post-br)
@@ -304,12 +313,23 @@
 
            ;; Diagonal connections
            (for [column (range 0 (dec ncols))
-                 row (range 0 cornerrow)]
+                 row (range 0 lastrow)
+                 :when (and (valid-key? column row)
+                            (valid-key? column (inc row))
+                            (valid-key? (inc column) row)
+                            (valid-key? (inc column) (inc row)))]
                 (triangle-hulls
                   (key-place column row web-post-br)
                   (key-place column (inc row) web-post-tr)
                   (key-place (inc column) row web-post-bl)
-                  (key-place (inc column) (inc row) web-post-tl))))))
+                  (key-place (inc column) (inc row) web-post-tl)))
+
+           ;; Step connector: col3 has row 0, col4 starts at row 1.
+           ;; Bridge the gap between col3-row0 (bottom-right) and col4-row1 (top-left).
+           [(triangle-hulls
+              (key-place 3 0 web-post-br)
+              (key-place 3 1 web-post-tr)
+              (key-place 4 1 web-post-tl))])))
 
 ;;;;;;;;;;;;
 ;; Thumbs ;;
@@ -817,19 +837,17 @@
 (defn hotswap-place [hotswap] (let [
                                      bottom-hotswap (rotate (deg2rad 180) [0 0 1] hotswap)
                                      ] (union
-                                        ; Bottom mounts
+                                        ; Bottom mounts (rows 0 and 1 — rotated 180°)
                                         (apply union
                                                (for [column columns
                                                      row [0 1]
-                                                     :when (or (.contains [2 3] column)
-                                                               (not= row lastrow))]
+                                                     :when (valid-key? column row)]
                                                  (->> bottom-hotswap
                                                       (key-place column row))))
                                         (apply union
                                                (for [column columns
-                                                     row [2 3]
-                                                     :when (or (.contains [2 3] column)
-                                                               (not= row lastrow))]
+                                                     row [2]
+                                                     :when (valid-key? column row)]
                                                  (->> hotswap
                                                       (key-place column row))))
                                         (thumb-mr-place (if trackball-enabled bottom-hotswap hotswap))
@@ -969,13 +987,12 @@
                                    (union
                                     (key-place 0 2 single-hotswap-clearance)
                                     (key-place 1 2 single-hotswap-clearance)
-                                    (key-place 2 3 single-hotswap-clearance)))
+                                    (key-place 2 lastrow single-hotswap-clearance)))
 (def key-clearance (union
                     (apply union
                           (for [column columns
                                 row rows
-                                :when (or (.contains [2 3] column)
-                                          (not= row lastrow))]
+                                :when (valid-key? column row)]
                             (->> (clearance keyswitch-width keyswitch-width 30)
                                  (key-place column row))))
                     trackball-hotswap-clearance))
@@ -1125,10 +1142,10 @@
 (def right-wall
   (let [tr (if (true? pinky-15u) wide-post-tr web-post-tr)
         br (if (true? pinky-15u) wide-post-br web-post-br)]
-       (union (key-wall-brace lastcol 0 0 1 tr lastcol 0 1 0 tr)
-              (for [y (range 0 lastrow)] (key-wall-brace lastcol y 1 0 tr lastcol y 1 0 br))
-              (for [y (range 1 lastrow)] (key-wall-brace lastcol (dec y) 1 0 br lastcol y 1 0 tr))
-              (key-wall-brace lastcol cornerrow 0 -1 br lastcol cornerrow 1 0 br))))
+       (union (key-wall-brace lastcol 1 0 1 tr lastcol 1 1 0 tr)   ; top cap at row 1 (first valid row for lastcol)
+              (for [y (range 1 lastrow)] (key-wall-brace lastcol y 1 0 tr lastcol y 1 0 br))  ; right side row 1
+              (for [y (range 2 (inc lastrow))] (key-wall-brace lastcol (dec y) 1 0 br lastcol y 1 0 tr))  ; row 1→2
+              (key-wall-brace lastcol lastrow 0 -1 br lastcol lastrow 1 0 br))))  ; bottom at lastrow
 
 (def trackball-walls
   (union
@@ -1230,10 +1247,18 @@
    ))
 
 (def pro-micro-wall (union
-                     (for [x (range 0 ncols)] (key-wall-brace x 0 0 1 web-post-tl x       0 0 1 web-post-tr))
-                     (for [x (range 1 ncols)] (key-wall-brace x 0 0 1 web-post-tl (dec x) 0 0 1 web-post-tr))
+                     ; Back (top) wall for cols 0–3, which have row 0
+                     (for [x (range 0 4)] (key-wall-brace x 0 0 1 web-post-tl x 0 0 1 web-post-tr))
+                     ; Back (top) wall for cols 4–5, which start at row 1
+                     (for [x (range 4 ncols)] (key-wall-brace x 1 0 1 web-post-tl x 1 0 1 web-post-tr))
+                     ; Connect adjacent top walls within cols 0–3 (all row 0)
+                     (for [x (range 1 4)] (key-wall-brace x 0 0 1 web-post-tl (dec x) 0 0 1 web-post-tr))
+                     ; Step: connect col 3 (row 0) top-wall to col 4 (row 1) top-wall
+                     (key-wall-brace 4 1 0 1 web-post-tl 3 0 0 1 web-post-tr)
+                     ; Connect adjacent top walls within cols 4–5 (all row 1)
+                     (for [x (range 5 ncols)] (key-wall-brace x 1 0 1 web-post-tl (dec x) 1 0 1 web-post-tr))
   ))
-(def back-pinky-wall (for [x (range 4 ncols)] (key-wall-brace x cornerrow 0 -1 web-post-bl x       cornerrow 0 -1 web-post-br)))
+(def back-pinky-wall (for [x (range 4 ncols)] (key-wall-brace x lastrow 0 -1 web-post-bl x lastrow 0 -1 web-post-br)))
 (def non-thumb-walls (union
                             ; left wall
                             (for [y (range 0 lastrow)] (union (wall-brace (partial left-key-place y 1)       -1 0 web-post (partial left-key-place y -1) -1 0 web-post)
@@ -1250,7 +1275,7 @@
                             (wall-brace (partial left-key-place 0 1) 0 1 web-post (partial left-key-place 0 1) -1 0 web-post)
                             ; front wall
                             (key-wall-brace 3 lastrow   0 -1 web-post-bl 3 lastrow 0.5 -1 web-post-br)
-                            (key-wall-brace 3 lastrow 0.5 -1 web-post-br 4 cornerrow 0.5 -1 web-post-bl)
+                            (key-wall-brace 3 lastrow 0.5 -1 web-post-br 4 lastrow 0.5 -1 web-post-bl)
 
 ;                            (for [x (range 5 ncols)] (key-wall-brace x cornerrow 0 -1 web-post-bl (dec x) cornerrow 0 -1 web-post-br))
                             ; Right before the start of the thumb
@@ -1365,16 +1390,16 @@
 (def pinky-connectors
   (apply union
          (concat
-           ;; Row connections
-           (for [row (range 0 lastrow)]
+           ;; Row connections — lastcol starts at row 1
+           (for [row (range 1 (inc lastrow))]
                 (triangle-hulls
                   (key-place lastcol row web-post-tr)
                   (key-place lastcol row wide-post-tr)
                   (key-place lastcol row web-post-br)
                   (key-place lastcol row wide-post-br)))
 
-           ;; Column connections
-           (for [row (range 0 cornerrow)]
+           ;; Column connections — connect rows 1→2
+           (for [row (range 1 lastrow)]
                 (triangle-hulls
                   (key-place lastcol row web-post-br)
                   (key-place lastcol row wide-post-br)
@@ -1385,8 +1410,8 @@
 
 (def pinky-walls
   (union
-    (key-wall-brace lastcol cornerrow 0 -1 web-post-br lastcol cornerrow 0 -1 wide-post-br)
-    (key-wall-brace lastcol 0 0 1 web-post-tr lastcol 0 0 1 wide-post-tr)))
+    (key-wall-brace lastcol lastrow 0 -1 web-post-br lastcol lastrow 0 -1 wide-post-br)  ; bottom at lastrow
+    (key-wall-brace lastcol 1 0 1 web-post-tr lastcol 1 0 1 wide-post-tr)))              ; top at row 1
 
 
 (def plate2d (cut
@@ -1429,25 +1454,8 @@
            (hull (cut (key-wall-brace lastcol cornerrow 0 -1 br lastcol cornerrow 1 0 br)) hull-with))))
 
 (def bottom-plate-thickness 2)
-(def plate-attempt (difference
-                    (extrude-linear {:height bottom-plate-thickness}
-                                    (union
-                                     ; pro micro wall
-                                     (for [x (range 0 (- ncols 1))] (hull  (cut (key-wall-brace x 0 0 1 web-post-tl x       0 0 1 web-post-tr)) (translate (key-position x lastrow [0 0 0]) (square (+ keyswitch-width 15) keyswitch-height))))
-                                     (for [x (range 1 ncols)] (hull (cut (key-wall-brace x 0 0 1 web-post-tl (dec x) 0 0 1 web-post-tr)) (translate (key-position x 2 [0 0 0]) (square 1 1))))
-                                     (hull (cut back-pinky-wall) (translate (key-position lastcol 0 [0 0 0]) (square keyswitch-width keyswitch-height)))
-                                     (hull (cut thumb-walls) (translate bl-thumb-loc (square 1 1)))
-                                     right-wall-plate
-                                     (hull (cut back-convex-thumb-wall-0) (translate bl-thumb-loc (square 1 1)))
-                                     (hull (cut back-convex-thumb-wall-1) (translate bl-thumb-loc (square 1 1)))
-                                     (hull (cut back-convex-thumb-wall-2) (translate bl-thumb-loc (square 1 1)))
-                                     (hull (cut thumb-corners))
-                                     (hull (cut thumb-to-left-wall) (translate (key-position (- lastcol 1) (- lastrow 1) [0 0 0]) (square 1 1)))
-                                     (hull (cut non-thumb-walls))
-                                      )
-                                    )
-                    (translate [0 0 -10] screw-insert-screw-holes)
-                    ))
+; TODO: plate-attempt disabled for Phase 1 — references row 0 for all cols, needs updating for 3x6 layout
+(def plate-attempt (cube 1 1 1)) ; placeholder
 
 
 (spit "things/test.scad"
@@ -1641,12 +1649,13 @@
 ;    usb-jack
     (difference (union
                  case-walls
-                 screw-insert-outers)
+                 ; screw-insert-outers  ; TODO: re-enable after verifying positions for 3x6 layout
+                 )
                 ; Leave room to insert the ball
                 (if trackball-enabled (translate trackball-origin trackball-insertion-cyl) nil)
                 usb-jack
                 trrs-holder-hole
-                screw-insert-holes
+                ; screw-insert-holes   ; TODO: re-enable after verifying positions for 3x6 layout
                 (translate palm-hole-origin (palm-rest-hole-rotate palm-buckle-holes))))
    (if trackball-enabled (translate trackball-origin (dowell-angle raised-trackball)) nil)
    hotswap-holes
