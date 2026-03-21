@@ -410,13 +410,13 @@
 
 (def thumbcaps
   (union
-    (thumb-1x-layout (sa-cap 1))
-    (thumb-15x-layout (rotate (/ π 2) [0 0 1] (sa-cap 1)))))
+    (thumb-1x-layout (sa-cap 1))))
+    ; (thumb-15x-layout (rotate (/ π 2) [0 0 1] (sa-cap 1)))))
 
 (def thumb
   (union
     (thumb-1x-layout single-plate)
-    (thumb-15x-layout single-plate)
+    ; (thumb-15x-layout single-plate)
     ; (thumb-15x-layout larger-plate)
     ))
 
@@ -980,8 +980,8 @@
   )
 
 (def thumb-key-clearance (union
-                          (thumb-1x-layout (clearance 0 0 30))
-                          (thumb-15x-layout (rotate (/ π 2) [0 0 1] (clearance 2.5 2.5 30)))))
+                          (thumb-1x-layout (clearance 0 0 30))))
+                          ; (thumb-15x-layout (rotate (/ π 2) [0 0 1] (clearance 2.5 2.5 30)))))
 
 (def trackball-hotswap-clearance
                                    (union
@@ -1258,52 +1258,55 @@
                      ; Connect adjacent top walls within cols 4–5 (all row 1)
                      (for [x (range 5 ncols)] (key-wall-brace x 1 0 1 web-post-tl (dec x) 1 0 1 web-post-tr))
   ))
-(def back-pinky-wall (for [x (range 4 ncols)] (key-wall-brace x lastrow 0 -1 web-post-bl x lastrow 0 -1 web-post-br)))
-(def non-thumb-walls (union
-                            ; left wall
-                            (for [y (range 0 lastrow)] (union (wall-brace (partial left-key-place y 1)       -1 0 web-post (partial left-key-place y -1) -1 0 web-post)
-                                                              (hull (key-place 0 y web-post-tl)
-                                                                    (key-place 0 y web-post-bl)
-                                                                    (left-key-place y  1 web-post)
-                                                                    (left-key-place y -1 web-post))))
-                            (for [y (range 1 lastrow)] (union (wall-brace (partial left-key-place (dec y) -1) -1 0 web-post (partial left-key-place y  1) -1 0 web-post)
-                                                              (hull (key-place 0 y       web-post-tl)
-                                                                    (key-place 0 (dec y) web-post-bl)
-                                                                    (left-key-place y        1 web-post)
-                                                                    (left-key-place (dec y) -1 web-post))))
-                            (wall-brace (partial key-place 0 0) 0 1 web-post-tl (partial left-key-place 0 1) 0 1 web-post)
-                            (wall-brace (partial left-key-place 0 1) 0 1 web-post (partial left-key-place 0 1) -1 0 web-post)
-                            ; front wall
-                            (key-wall-brace 3 lastrow   0 -1 web-post-bl 3 lastrow 0.5 -1 web-post-br)
-                            (key-wall-brace 3 lastrow 0.5 -1 web-post-br 4 lastrow 0.5 -1 web-post-bl)
 
-;                            (for [x (range 5 ncols)] (key-wall-brace x cornerrow 0 -1 web-post-bl (dec x) cornerrow 0 -1 web-post-br))
-                            ; Right before the start of the thumb
-                            (wall-brace thumb-tr-place  0 -1 thumb-post-br (partial key-place 3 lastrow)  0 -1 web-post-bl)))
+(def back-pinky-wall (for [x (range 4 ncols)] (key-wall-brace x lastrow 0 -1 web-post-bl x lastrow 0 -1 web-post-br)))
+
+(def non-thumb-walls (union
+  ; left wall
+  (for [y (range 0 lastrow)] (union (wall-brace (partial left-key-place y 1)       -1 0 web-post (partial left-key-place y -1) -1 0 web-post)
+    (hull (key-place 0 y web-post-tl)
+      (key-place 0 y web-post-bl)
+      (left-key-place y  1 web-post)
+      (left-key-place y -1 web-post))))
+  (for [y (range 1 lastrow)] (union (wall-brace (partial left-key-place (dec y) -1) -1 0 web-post (partial left-key-place y  1) -1 0 web-post)
+    (hull (key-place 0 y web-post-tl)
+      (key-place 0 (dec y) web-post-bl)
+      (left-key-place y        1 web-post)
+      (left-key-place (dec y) -1 web-post))))
+  (wall-brace (partial key-place 0 0) 0 1 web-post-tl (partial left-key-place 0 1) 0 1 web-post)
+  (wall-brace (partial left-key-place 0 1) 0 1 web-post (partial left-key-place 0 1) -1 0 web-post)
+  ; front wall
+  (key-wall-brace 3 lastrow   0 -1 web-post-bl 3 lastrow 0.5 -1 web-post-br)
+  (key-wall-brace 3 lastrow 0.5 -1 web-post-br 4 lastrow 0.5 -1 web-post-bl)
+  ;(for [x (range 5 ncols)] (key-wall-brace x cornerrow 0 -1 web-post-bl (dec x) cornerrow 0 -1 web-post-br))
+  ; Right before the start of the thumb
+  (wall-brace thumb-tr-place  0 -1 thumb-post-br (partial key-place 3 lastrow)  0 -1 web-post-bl))
+)
+
 (def case-walls
   (union
-   right-wall
-   back-pinky-wall
-   pro-micro-wall
-    non-thumb-walls
-   back-convex-thumb-wall-0
-   back-convex-thumb-wall-1
-   back-convex-thumb-wall-2
-    thumb-walls
-    thumb-corners
-   (if trackball-enabled nil thumb-to-left-wall)
-   back-convex-thumb-wall-0
-   ))
+    right-wall
+    back-pinky-wall
+    pro-micro-wall
+      non-thumb-walls
+    back-convex-thumb-wall-0
+    back-convex-thumb-wall-1
+    back-convex-thumb-wall-2
+      thumb-walls
+      thumb-corners
+    (if trackball-enabled nil thumb-to-left-wall)
+    back-convex-thumb-wall-0
+  ))
 
 (def usb-holder-ref (key-position 0 0 (map - (wall-locate2  0  -1) [0 (/ mount-height 2) 0])))
 
 (def usb-holder-position (map + [5 16 0] [(first usb-holder-ref) (second usb-holder-ref) 2]))
-(def usb-holder-cube   (cube 18.5 35 4))
+(def usb-holder-cube (cube 18.5 35 4))
 (def usb-holder-holder (translate (map + usb-holder-position [5 -12.9 0]) (difference (cube 21 39 6) (translate [0 0 1] usb-holder-cube))))
 
 (def usb-jack (translate (map + usb-holder-position [5 10 4]) (union
-                                                               (translate [0 -2.5 0] (cube 12 3 5))
-                                                               (cube 6.5 11.5 3.1))))
+  (translate [0 -2.5 0] (cube 12 3 5))
+  (cube 6.5 11.5 3.1))))
 
 (def pro-micro-position (map + (key-position 0 1 (wall-locate3 -1 0)) [-6 2 -15]))
 (def pro-micro-space-size [4 10 12]) ; z has no wall;
@@ -1311,7 +1314,7 @@
 (def pro-micro-holder-size [(+ pro-micro-wall-thickness (first pro-micro-space-size)) (+ pro-micro-wall-thickness (second pro-micro-space-size)) (last pro-micro-space-size)])
 (def pro-micro-space
   (->> (cube (first pro-micro-space-size) (second pro-micro-space-size) (last pro-micro-space-size))
-       (translate [(- (first pro-micro-position) (/ pro-micro-wall-thickness 2)) (- (second pro-micro-position) (/ pro-micro-wall-thickness 2)) (last pro-micro-position)])))
+    (translate [(- (first pro-micro-position) (/ pro-micro-wall-thickness 2)) (- (second pro-micro-position) (/ pro-micro-wall-thickness 2)) (last pro-micro-position)])))
 (def pro-micro-holder
   (difference
     (->> (cube (first pro-micro-holder-size) (second pro-micro-holder-size) (last pro-micro-holder-size))
@@ -1346,25 +1349,25 @@
         (translate [0 0 (/ height 2)] (->> (binding [*fn* 30] (sphere top-radius))))))
 
 (defn screw-insert [column row bottom-radius top-radius height offset]
-      (let [shift-right   (= column lastcol)
-            shift-left    (= column 0)
-            shift-up      (and (not (or shift-right shift-left)) (= row 0))
-            shift-down    (and (not (or shift-right shift-left)) (>= row lastrow))
-            position      (if shift-up     (key-position column row (map + (wall-locate2  0  1) [0 (/ mount-height 2) 0]))
-                                           (if shift-down  (key-position column row (map - (wall-locate2  0 -1) [0 (/ mount-height 2) 0]))
-                                                           (if shift-left (map + (left-key-position row 0) (wall-locate3 -1 0))
-                                                                          (key-position column row (map + (wall-locate2  1  0) [(/ mount-width 2) 0 0])))))]
-           (->> (screw-insert-shape bottom-radius top-radius height)
-                (translate (map + offset [(first position) (second position) (/ height 2)])))))
+  (let [shift-right   (= column lastcol)
+    shift-left    (= column 0)
+    shift-up      (and (not (or shift-right shift-left)) (= row 0))
+    shift-down    (and (not (or shift-right shift-left)) (>= row lastrow))
+    position      (if shift-up     (key-position column row (map + (wall-locate2  0  1) [0 (/ mount-height 2) 0]))
+      (if shift-down  (key-position column row (map - (wall-locate2  0 -1) [0 (/ mount-height 2) 0]))
+        (if shift-left (map + (left-key-position row 0) (wall-locate3 -1 0))
+          (key-position column row (map + (wall-locate2  1  0) [(/ mount-width 2) 0 0])))))]
+    (->> (screw-insert-shape bottom-radius top-radius height)
+      (translate (map + offset [(first position) (second position) (/ height 2)])))))
 
 (defn screw-insert-all-shapes [bottom-radius top-radius height]
-      (union (screw-insert 0 0         bottom-radius top-radius height [7.5 7 0])
-             (screw-insert 0 lastrow   bottom-radius top-radius height (if trackball-enabled [-2 33 0] [0 15 0]))
-             ;  (screw-insert lastcol lastrow  bottom-radius top-radius height [-5 13 0])
-             ;  (screw-insert lastcol 0         bottom-radius top-radius height [-3 6 0])
-             (screw-insert lastcol lastrow  bottom-radius top-radius height [-3.5 17 0])
-             (screw-insert lastcol 0         bottom-radius top-radius height [-1 2 0])
-             (screw-insert 1 lastrow         bottom-radius top-radius height (if trackball-enabled [1 -16 0] [1 -18.5 0]))))
+  (union (screw-insert 0 0         bottom-radius top-radius height [7.5 7 0])
+    (screw-insert 0 lastrow   bottom-radius top-radius height (if trackball-enabled [-2 33 0] [0 15 0]))
+    ;  (screw-insert lastcol lastrow  bottom-radius top-radius height [-5 13 0])
+    ;  (screw-insert lastcol 0         bottom-radius top-radius height [-3 6 0])
+    (screw-insert lastcol lastrow  bottom-radius top-radius height [-3.5 17 0])
+    (screw-insert lastcol 0         bottom-radius top-radius height [-1 2 0])
+    (screw-insert 1 lastrow         bottom-radius top-radius height (if trackball-enabled [1 -16 0] [1 -18.5 0]))))
 
 ; Hole Depth Y: 4.4
 (def screw-insert-height 4)
@@ -1375,12 +1378,12 @@
 (def screw-insert-holes  (screw-insert-all-shapes screw-insert-bottom-radius screw-insert-top-radius screw-insert-height))
 
 (spit "things/screw-test.scad"
-      (write-scad
-       (difference
-        (screw-insert 0 0 (+ screw-insert-bottom-radius 1.65) (+ screw-insert-top-radius 1.65) (+ screw-insert-height 1.5) [0 0 0])
-        (screw-insert 0 0 screw-insert-bottom-radius screw-insert-top-radius screw-insert-height [0 0 0])
-         )
-       ))
+  (write-scad
+    (difference
+    (screw-insert 0 0 (+ screw-insert-bottom-radius 1.65) (+ screw-insert-top-radius 1.65) (+ screw-insert-height 1.5) [0 0 0])
+    (screw-insert 0 0 screw-insert-bottom-radius screw-insert-top-radius screw-insert-height [0 0 0])
+    )
+  ))
 
 ; Wall Thickness W:\t1.65
 (def screw-insert-case-radius 1.5)
@@ -1389,52 +1392,50 @@
 
 (def pinky-connectors
   (apply union
-         (concat
-           ;; Row connections — lastcol starts at row 1
-           (for [row (range 1 (inc lastrow))]
-                (triangle-hulls
-                  (key-place lastcol row web-post-tr)
-                  (key-place lastcol row wide-post-tr)
-                  (key-place lastcol row web-post-br)
-                  (key-place lastcol row wide-post-br)))
+    (concat
+      ;; Row connections — lastcol starts at row 1
+      (for [row (range 1 (inc lastrow))]
+        (triangle-hulls
+          (key-place lastcol row web-post-tr)
+          (key-place lastcol row wide-post-tr)
+          (key-place lastcol row web-post-br)
+          (key-place lastcol row wide-post-br)))
 
-           ;; Column connections — connect rows 1→2
-           (for [row (range 1 lastrow)]
-                (triangle-hulls
-                  (key-place lastcol row web-post-br)
-                  (key-place lastcol row wide-post-br)
-                  (key-place lastcol (inc row) web-post-tr)
-                  (key-place lastcol (inc row) wide-post-tr)))
-           ;;
-           )))
+      ;; Column connections — connect rows 1→2
+      (for [row (range 1 lastrow)]
+        (triangle-hulls
+          (key-place lastcol row web-post-br)
+          (key-place lastcol row wide-post-br)
+          (key-place lastcol (inc row) web-post-tr)
+          (key-place lastcol (inc row) wide-post-tr)))
+    )))
 
 (def pinky-walls
   (union
     (key-wall-brace lastcol lastrow 0 -1 web-post-br lastcol lastrow 0 -1 wide-post-br)  ; bottom at lastrow
-    (key-wall-brace lastcol 1 0 1 web-post-tr lastcol 1 0 1 wide-post-tr)))              ; top at row 1
+    (key-wall-brace lastcol 1 0 1 web-post-tr lastcol 1 0 1 wide-post-tr))) ; top at row 1
 
 
 (def plate2d (cut
-              (translate [0 0 -0.1]
-                         (union case-walls
-                                pinky-walls
-                                ))))
+  (translate [0 0 -0.1]
+    (union case-walls
+      pinky-walls
+    ))))
 
 (def bigplate
   (hull
     plate2d
-   (circle 1))
+    (circle 1))
   )
 
 (def cutout-plate
   (color [220/255 163/255 163/255 1]
-         (difference
-          bigplate
-          plate2d
-          )
-         )
-
+    (difference
+    bigplate
+    plate2d
+    )
   )
+)
 
 (def bigattempt
   (union
@@ -1501,12 +1502,11 @@
     [hook-height (if with-hook? tent-ball-rad (/ tent-ball-rad 1.5))]
     (rotate (deg2rad 90) [1 0 0]
             (union
-             (translate [0 (/ hook-height 2) 0]
-                        (rotate (deg2rad 90) [1 0 0] (cube tent-ball-holder-thickness tent-ball-holder-thickness hook-height)))
-             (if with-hook? (translate [(- (+ tent-ball-rad (/ tent-ball-holder-thickness 2))) tent-ball-rad 0]
-                                       (extrude-rotate {:angle hook-angle :convexity 10} (translate [(+ tent-ball-rad (/ tent-ball-holder-thickness 2)) 0]
-                                                                                                    (square tent-ball-holder-thickness tent-ball-holder-thickness)))
-                                       ) nil)
+              (translate [0 (/ hook-height 2) 0]
+                (rotate (deg2rad 90) [1 0 0] (cube tent-ball-holder-thickness tent-ball-holder-thickness hook-height)))
+              (if with-hook? (translate [(- (+ tent-ball-rad (/ tent-ball-holder-thickness 2))) tent-ball-rad 0]
+              (extrude-rotate {:angle hook-angle :convexity 10} (translate [(+ tent-ball-rad (/ tent-ball-holder-thickness 2)) 0]
+                ) nil)
              )
             )))
 
