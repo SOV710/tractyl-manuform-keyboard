@@ -1606,81 +1606,80 @@
                       palm-buckle))
 
 (def palm-rest (union
-                positioned-palm-support
-                ; Subtract out the part of the rod that's sticking up
-
-                 palm-attach-rod
+  positioned-palm-support
+  ; Subtract out the part of the rod that's sticking up
+  palm-attach-rod
 ))
 
 (spit "things/palm-rest.scad" (
-                           write-scad
-                                        (include "../nutsnbolts/cyl_head_bolt.scad")
-                                        palm-rest
-                           ))
+  write-scad
+    (include "../nutsnbolts/cyl_head_bolt.scad")
+    palm-rest
+  ))
+
 (spit "things/left-palm-rest.scad" (
-                                     write-scad
-                                     (include "../nutsnbolts/cyl_head_bolt.scad")
-                                     (mirror [-1 0 0] palm-rest)
-                                     ))
+  write-scad
+    (include "../nutsnbolts/cyl_head_bolt.scad")
+    (mirror [-1 0 0] palm-rest)
+  ))
 
 (spit "things/palm-attach-test.scad" (write-scad
-                                       palm-attach-rod
-                                       ))
-
+  palm-attach-rod
+  ))
 
 (def trackball-subtract (union
-                         ; Subtract out the actual trackball
-                         (translate trackball-origin (dowell-angle raised-trackball))
-                         ; Subtract out space for the cup, because sometimes things from the keyboard creep in
-                         (translate trackball-origin (sphere (/ trackball-width-plus-bearing 2)))
-                         ; Just... double check that we have the full dowell negative
-                         (translate trackball-origin rotated-dowells)
-                         hotswap-clearance))
+  ; Subtract out the actual trackball
+  (translate trackball-origin (dowell-angle raised-trackball))
+  ; Subtract out space for the cup, because sometimes things from the keyboard creep in
+  (translate trackball-origin (sphere (/ trackball-width-plus-bearing 2)))
+  ; Just... double check that we have the full dowell negative
+  (translate trackball-origin rotated-dowells)
+  hotswap-clearance))
 
 (def model-right
   (difference
-   (union
-    key-holes
-    pinky-connectors
-    pinky-walls
-    connectors
-    thumb
-    thumb-connectors
-;    usb-jack
-    (difference (union
-                 case-walls
-                 ; screw-insert-outers  ; TODO: re-enable after verifying positions for 3x6 layout
-                 )
-                ; Leave room to insert the ball
-                (if trackball-enabled (translate trackball-origin trackball-insertion-cyl) nil)
-                usb-jack
-                trrs-holder-hole
-                ; screw-insert-holes   ; TODO: re-enable after verifying positions for 3x6 layout
-                (translate palm-hole-origin (palm-rest-hole-rotate palm-buckle-holes))))
+    (union
+      key-holes
+      pinky-connectors
+      pinky-walls
+      connectors
+      thumb
+      thumb-connectors
+      ; usb-jack
+      (difference (union
+        case-walls
+        ; screw-insert-outers  ; TODO: re-enable after verifying positions for 3x6 layout
+        )
+      ; Leave room to insert the ball
+      (if trackball-enabled (translate trackball-origin trackball-insertion-cyl) nil)
+      usb-jack
+      trrs-holder-hole
+      ; screw-insert-holes   ; TODO: re-enable after verifying positions for 3x6 layout
+      (translate palm-hole-origin (palm-rest-hole-rotate palm-buckle-holes))))
    (if trackball-enabled (translate trackball-origin (dowell-angle raised-trackball)) nil)
    hotswap-holes
    (translate [0 0 -20] (cube 350 350 40))))
 
 (def trackball-mount-translated-to-model (difference
-                                          (union
-                                           (translate trackball-origin trackball-mount)
-                                           trackball-walls
-                                           trackball-to-case
-                                           )
-                                          trackball-subtract
-                                          key-clearance
-                                          thumb-key-clearance
-                                          (translate trackball-origin trackball-insertion-cyl)
-                                          ))
+  (union
+    (translate trackball-origin trackball-mount)
+    trackball-walls
+    trackball-to-case
+  )
+  trackball-subtract
+  key-clearance
+  thumb-key-clearance
+  (translate trackball-origin trackball-insertion-cyl)
+  ))
 
 (spit "things/trackball-test.scad" (write-scad
-                                    (difference
-                                    (union
-                                     trackball-mount-translated-to-model
-                                     trackball-walls)
-                                     trackball-subtract
-                                     thumb-key-clearance
-                                     (translate [0 0 -20] (cube 350 350 40)))))
+  (difference
+    (union
+      trackball-mount-translated-to-model
+      trackball-walls)
+    trackball-subtract
+    thumb-key-clearance
+    (translate [0 0 -20] (cube 350 350 40)))))
 
 ;(spit "things/palm-rest.scad" (write-scad palm-rest))
 
@@ -1737,30 +1736,30 @@
                                ))
 
 (spit "things/right-test.scad"
-      (write-scad
-       (difference
-        (union
-         hand-on-test
-         (color [220/255 120/255 120/255 1] hotswap-tester)
-         (color [220/255 163/255 163/255 1] right-plate)
-         model-right
-         (translate (map + palm-hole-origin [0 (+ buckle-length 3) (/ buckle-height 2)])
-                    (palm-rest-hole-rotate palm-rest))
-;         (if trackball-enabled (translate trackball-origin test-ball) nil)
-         thumbcaps
-         caps)
+  (write-scad
+    (difference
+      (union
+        hand-on-test
+        (color [220/255 120/255 120/255 1] hotswap-tester)
+        (color [220/255 163/255 163/255 1] right-plate)
+        model-right
+        (translate (map + palm-hole-origin [0 (+ buckle-length 3) (/ buckle-height 2)])
+          (palm-rest-hole-rotate palm-rest))
+        ; (if trackball-enabled (translate trackball-origin test-ball) nil)
+        thumbcaps
+        caps)
 
-        (translate [0 0 -20] (cube 350 350 40)))))
+      (translate [0 0 -20] (cube 350 350 40)))))
 
 (spit "things/right.scad" (write-scad
-                           (include "../nutsnbolts/cyl_head_bolt.scad")
-                           (union
-                                        model-right
-                            ;                                       (translate (key-position 0 1 [-20 20 0]) (cube 49 70 200))
-;                                       (translate (key-position 3 3 [10 10 0]) (cube 60 30 200))
-;                                       (translate (key-position 2 2 [14 -4 0]) (cube 41 28 200))
-;                                       (translate (key-position 4 0 [-10 24 0]) (cube 80 32 200))
-;                                       (translate (key-position 4 3 [0 0 0]) (cube 80 40 200))
-                                       )))
+  (include "../nutsnbolts/cyl_head_bolt.scad")
+  (union
+    model-right
+    ; (translate (key-position 0 1 [-20 20 0]) (cube 49 70 200))
+    ; (translate (key-position 3 3 [10 10 0]) (cube 60 30 200))
+    ; (translate (key-position 2 2 [14 -4 0]) (cube 41 28 200))
+    ; (translate (key-position 4 0 [-10 24 0]) (cube 80 32 200))
+    ; (translate (key-position 4 3 [0 0 0]) (cube 80 40 200))
+  )))
 
 (defn -main [dum] 1)  ; dummy to make it easier to batch
