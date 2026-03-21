@@ -427,20 +427,20 @@
 (def thumb-connectors
   (if trackball-enabled
     (union
-     ; top right vertical
-     (triangle-hulls
-      (thumb-tr-place web-post-br)
-      (thumb-tr-place web-post-bl)
-      (thumb-mr-place web-post-br))
-     ; Between the top and middle
-     (triangle-hulls
-      (thumb-tr-place web-post-tl)
-      (thumb-mr-place web-post-tr)
-      (thumb-mr-place web-post-br))
-     (triangle-hulls
-      (thumb-tr-place web-post-bl)
-      (thumb-tr-place web-post-tl)
-      (thumb-mr-place web-post-br))
+     ; ; top right vertical
+     ; (triangle-hulls
+     ;  (thumb-tr-place web-post-br)
+     ;  (thumb-tr-place web-post-bl)
+     ;  (thumb-mr-place web-post-br))
+     ; ; Between the top and middle
+     ; (triangle-hulls
+     ;  (thumb-tr-place web-post-tl)
+     ;  (thumb-mr-place web-post-tr)
+     ;  (thumb-mr-place web-post-br))
+     ; (triangle-hulls
+     ;  (thumb-tr-place web-post-bl)
+     ;  (thumb-tr-place web-post-tl)
+     ;  (thumb-mr-place web-post-br))
      ; Between middle and first bottom
      (triangle-hulls
       (thumb-mr-place web-post-tl)
@@ -451,11 +451,11 @@
       (thumb-mr-place web-post-tl)
       (thumb-br-place web-post-br)
       (thumb-bl-place web-post-br))
-     ; Between the top and middle over by the trackball
-     (triangle-hulls
-      (thumb-tr-place web-post-tl)
-      (thumb-mr-place web-post-tr)
-      (thumb-mr-place web-post-tl))
+     ; ; Between the top and middle over by the trackball
+     ; (triangle-hulls
+     ;  (thumb-tr-place web-post-tl)
+     ;  (thumb-mr-place web-post-tr)
+     ;  (thumb-mr-place web-post-tl))
      ; Between the bottom two
      (triangle-hulls
       (thumb-br-place web-post-tr)
@@ -472,15 +472,15 @@
       (thumb-bl-place web-post-br))
      (triangle-hulls    ; top two to the main keyboard, starting on the left
       (key-place 0 cornerrow web-post-br)
-      (thumb-tr-place thumb-post-tl)
+      ; (thumb-tr-place thumb-post-tl)
       (key-place 1 cornerrow web-post-bl)
-      (thumb-tr-place thumb-post-tr)
+      ; (thumb-tr-place thumb-post-tr)
       (key-place 1 cornerrow web-post-br)
       (key-place 2 lastrow web-post-tl)
       (key-place 2 lastrow web-post-bl)
-      (thumb-tr-place thumb-post-tr)
+      ; (thumb-tr-place thumb-post-tr)
       (key-place 2 lastrow web-post-bl)
-      (thumb-tr-place thumb-post-br)
+      ; (thumb-tr-place thumb-post-br)
       (key-place 2 lastrow web-post-br)
       (key-place 3 lastrow web-post-bl)
       (key-place 2 lastrow web-post-tr)
